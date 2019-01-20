@@ -32,11 +32,11 @@ func DoSomething(ctx *node.ServiceContext, config *Config) error {
 }
 
 func (core *Core) Start() error {
-    fmt.Printf("[%s] start", core.config.Name)
+    fmt.Printf("[%s] start\n", core.config.Name)
     return nil
 }
 
 func (core *Core) Stop() error {
-    fmt.Println("[%s] stop", core.config.Name)
+    fmt.Printf("[%s] stop\n", core.config.Name)
     return nil
 }
