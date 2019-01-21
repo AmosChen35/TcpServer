@@ -3,16 +3,52 @@ package main
 import(
     "fmt"
     "os"
+    "sort"
     "os/signal"
     "syscall"
     "time"
 
     "github.com/AmosChen35/TcpServer/server/node"
     "github.com/AmosChen35/TcpServer/server/core"
-    "github.com/AmosChen35/TcpServer/server/params"
+    "github.com/AmosChen35/TcpServer/server/utils"
+    "gopkg.in/urfave/cli.v1"
 )
 
-func startNode(n *node.Node) error {
+var (
+    // Git SHA1 commit hash of the release (set via linker flags)
+    gitCommit = ""
+    // The app that holds all commands and flags.
+    app = utils.NewApp(gitCommit, "the go-ethereum command line interface")
+    // flags that configure the node
+    nodeFlags = []cli.Flag{
+        utils.TestFlag,
+        utils.DataDirFlag,
+    }
+)
+
+func init() {
+    app.Action = Server
+    app.HideVersion = true // we have a command to print the version
+    app.Copyright = "Copyright 2019 ..."
+    app.Commands = []cli.Command{
+        consoleCommand,
+        versionCommand,
+        licenseCommand,
+    }
+    sort.Sort(cli.CommandsByName(app.Commands))
+
+    app.Flags = append(app.Flags, nodeFlags...)
+
+    app.Before = func(ctx *cli.Context) error {
+        return nil
+    }
+
+    app.After = func(ctx *cli.Context) error {
+        return nil
+    }
+}
+
+func startNode(ctx *cli.Context, n *node.Node) error {
     if err := n.Start(); err != nil {
         return fmt.Errorf("Error starting protocol node: %v", err)
     }
@@ -32,47 +68,38 @@ func startNode(n *node.Node) error {
         }
     }()
 
-    return nil
-}
-
-func main() {
-    fmt.Println("Server Start")
-
-    config := &node.Config{
-        Name:    "Server1",
-        NodeVersion: params.ChainVersion,
-    }
-
-    myNode, err := node.New(config)
-    if err != nil {
-        panic(err)
-    }
-
-    if err := myNode.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-        return core.New(ctx, &core.Config{
-            Name:       "CoreService",
-            TCPPort:    8080,
-        })
-    }); err != nil {
-        panic(err)
-    }
-
-    if err := startNode(myNode); err != nil {
-        panic(err)
-    }
-
     //Main observer
     go func() {
         for {
-            fmt.Println("OK")
             time.Sleep(time.Duration(1)*time.Second)
         }
     }()
 
     var core *core.Core
-    if err := myNode.Service(&core); err != nil {
+    if err := n.Service(&core); err != nil {
         panic(err)
     }
 
-    myNode.Wait()
+    return nil
+}
+
+func Server(ctx *cli.Context) error {
+    if args := ctx.Args(); len(args) > 0 {
+        return fmt.Errorf("invalid command: %q", args[0])
+    }
+
+    fmt.Println("Server Start")
+    node := makeNode(ctx)
+    if err := startNode(ctx, node); err != nil {
+        panic(err)
+    }
+    node.Wait()
+    return nil
+}
+
+func main() {
+    if err := app.Run(os.Args); err != nil {
+        fmt.Fprintln(os.Stderr, err)
+        os.Exit(1)
+    }
 }

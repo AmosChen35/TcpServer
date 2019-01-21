@@ -5,6 +5,8 @@ import(
     "reflect"
     "bytes"
     "github.com/BurntSushi/toml"
+
+    "github.com/AmosChen35/TcpServer/server/rpc"
 )
 
 type ServiceContext struct{
@@ -13,6 +15,7 @@ type ServiceContext struct{
 }
 
 type Service interface {
+	APIs() []rpc.API
     Start() error
     Stop() error
 }
