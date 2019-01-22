@@ -1,6 +1,7 @@
 package node
 
 import (
+    "net"
     "fmt"
     "sync"
     "reflect"
@@ -16,8 +17,12 @@ type Node struct{
     serviceFuncs []ServiceConstructor     // Service constructors (in dependency order)
     services     map[reflect.Type]Service // Currently running services
 
-	rpcAPIs       []rpc.API   // List of APIs currently provided by the node
+    rpcAPIs       []rpc.API   // List of APIs currently provided by the node
     inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
+
+    tcpEndpoint string  //TCP endpoint (IP + PORT)
+    tcpListener net.Listener  //TCP listener socket to server API request
+    tcpHandler *rpc.Server // TCP request handler to process the API request
 
     running bool   // node running flag
     stop    chan struct{} // Channel to wait for termination notifications
@@ -165,22 +170,35 @@ func (n *Node) Restart() error {
     return nil
 }
 
+func (n *Node) startTCP(endpoint string, apis []rpc.API, timeouts rpc.TCPTimeouts) error {
+    if endpoint == "" {
+        return nil
+    }
+
+
+    return nil
+}
+
+func (n *Node) stopTPTCP() {
+
+}
+
 // startRPC is a helper method to start all the various RPC endpoint during node
 // startup. It's not meant to be called at any time afterwards as it makes certain
 // assumptions about the state of the node.
 func (n *Node) startRPC(services map[reflect.Type]Service) error {
-	// Gather all the possible APIs to surface
-	apis := n.apis()
-	for _, service := range services {
-		apis = append(apis, service.APIs()...)
-	}
-	// Start the various API endpoints, terminating all in case of errors
-	if err := n.startInProc(apis); err != nil {
-		return err
-	}
-	// All API endpoints started successfully
-	n.rpcAPIs = apis
-	return nil
+    // Gather all the possible APIs to surface
+    apis := n.apis()
+    for _, service := range services {
+        apis = append(apis, service.APIs()...)
+    }
+    // Start the various API endpoints, terminating all in case of errors
+    if err := n.startInProc(apis); err != nil {
+        return err
+    }
+    // All API endpoints started successfully
+    n.rpcAPIs = apis
+    return nil
 }
 
 func (n *Node) startInProc(apis []rpc.API) error {
@@ -207,13 +225,25 @@ func (n *Node) Attach() (*rpc.Client, error) {
     return rpc.DialInProc(n.inprocHandler), nil
 }
 
+// retrive the current TCP endpoint used by the protocol stack
+func (n *Node) TCPEndpoint() string {
+    n.lock.RLock()
+    defer n.lock.RUnlock()
+
+    if n.tcpListener == nil {
+        return n.tcpListener.Addr().String()
+    }
+
+    return n.tcpEndpoint
+}
+
 // apis returns the collection of RPC descriptors this node offers.
 func (n *Node) apis() []rpc.API {
-	return []rpc.API{
-		{
-			Namespace: "admin",
-			Version:   "1.0",
-			Service:   NewPrivateAdminAPI(n),
-		},
-	}
+    return []rpc.API{
+        {
+            Namespace: "admin",
+            Version:   "1.0",
+            Service:   NewPrivateAdminAPI(n),
+        },
+    }
 }
