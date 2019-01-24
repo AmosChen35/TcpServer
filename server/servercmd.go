@@ -4,10 +4,12 @@ import(
     "os"
     "fmt"
     "runtime"
+    "strings"
 
     "github.com/AmosChen35/TcpServer/server/utils"
     "github.com/AmosChen35/TcpServer/server/params"
     "github.com/AmosChen35/TcpServer/server/console"
+    "github.com/AmosChen35/TcpServer/server/rpc"
     "gopkg.in/urfave/cli.v1"
 )
 
@@ -18,6 +20,16 @@ var(
         Usage:    "Start an interactive JavaScript environment",
         Flags:    nodeFlags,
         Category: "CONSOLE COMMANDS",
+        Description: `
+`,
+    }
+    attachCommand = cli.Command{
+        Action:    utils.MigrateFlags(remoteConsole),
+        Name:      "attach",
+        Usage:     "Start an interactive JavaScript environment (connect to node)",
+        ArgsUsage: "[endpoint]",
+        Flags:     nodeFlags,
+        Category:  "CONSOLE COMMANDS",
         Description: `
 `,
     }
@@ -76,6 +88,51 @@ func localConsole(ctx *cli.Context) error {
     console.Interactive()
 
     return nil
+}
+
+func remoteConsole(ctx *cli.Context) error {
+    // Attach to a remotely running geth instance and start the JavaScript console
+    endpoint := ctx.Args().First()
+    if endpoint == "" {
+        panic("the remote endpoint string missing.")
+    }
+    client, err := dialRPC(endpoint)
+    if err != nil {
+        return fmt.Errorf("Unable to attach to remote server: %v", err)
+    }
+
+    config := console.Config{
+        DataDir: utils.MakeDataDir(ctx),
+        //DocRoot: ctx.GlobalString(utils.JSpathFlag.Name),
+        Client:  client,
+        //Preload: utils.MakeConsolePreloads(ctx),
+    }
+
+    console, err := console.New(config)
+    if err != nil {
+        fmt.Printf("Failed to start the JavaScript console: %v", err)
+    }
+    defer console.Stop(false)
+
+    if script := ctx.GlobalString(utils.ExecFlag.Name); script != "" {
+        console.Evaluate(script)
+        return nil
+    }
+
+    // Otherwise print the welcome screen and enter interactive mode
+    console.Welcome()
+    console.Interactive()
+
+    return nil
+}
+
+func dialRPC(endpoint string) (*rpc.Client, error) {
+    if endpoint == "" {
+        panic("the remote endpoint string missing.")
+    } else if strings.HasPrefix(endpoint, "tcp:") {
+        endpoint = endpoint[4:]
+    }
+    return rpc.Dial(endpoint)
 }
 
 func version(ctx *cli.Context) error {

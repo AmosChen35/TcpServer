@@ -1,6 +1,7 @@
 package rpc
 
 import(
+    "net"
     "fmt"
     "reflect"
     "context"
@@ -29,6 +30,7 @@ func NewServer() *Server {
     server := &Server{
         services: make(serviceRegistry),
         codecs:   mapset.NewSet(),
+        connections: make(Connections),
         run:      1,
     }
 
@@ -106,6 +108,7 @@ func (s *Server) serveRequest(ctx context.Context, codec ServerCodec, singleShot
             fmt.Println(fmt.Errorf(string(buf)))
         }
         s.codecsMu.Lock()
+        s.RemoveConnection(codec.Connection())
         s.codecs.Remove(codec)
         s.codecsMu.Unlock()
     }()
@@ -189,6 +192,20 @@ func (s *Server) ServeCodec(codec ServerCodec, options CodecOption) {
     s.serveRequest(context.Background(), codec, false, options)
 }
 
+// Stop will stop reading new requests, wait for stopPendingRequestTimeout to allow pending requests to finish,
+// close all codecs which will cancel pending requests/subscriptions.
+func (s *Server) Stop() {
+    if atomic.CompareAndSwapInt32(&s.run, 1, 0) {
+        fmt.Println("RPC Server shutdown initiatied")
+        s.codecsMu.Lock()
+        defer s.codecsMu.Unlock()
+        s.codecs.Each(func(c interface{}) bool {
+            c.(ServerCodec).Close()
+            return true
+        })
+    }
+}
+
 // createSubscription will call the subscription callback and returns the subscription id or error.
 func (s *Server) createSubscription(ctx context.Context, c ServerCodec, req *serverRequest) (ID, error) {
     // subscription have as first argument the context following optional arguments
@@ -258,6 +275,7 @@ func (s *Server) handle(ctx context.Context, codec ServerCodec, req *serverReque
     }
 
     // execute RPC method and return result
+    fmt.Printf("[%v] execute service [%v] command [%v]\n", codec.From(), req.svcname, req.callb.method.Name)
     reply := req.callb.method.Func.Call(arguments)
     if len(reply) == 0 {
         return codec.CreateResponse(req.id, nil), nil
@@ -391,4 +409,25 @@ func (s *Server) readRequest(codec ServerCodec) ([]*serverRequest, bool, Error) 
     }
 
     return requests, batch, nil
+}
+
+func (s *Server) AddConnection(conn net.Conn) *Connection {
+    connection := Connection {
+        conn: conn,
+    }
+
+    s.connections[&connection] = 1
+
+    return &connection
+}
+
+func (s *Server) RemoveConnection(conn *Connection) {
+    _, ok := s.connections[conn];
+    if ok {
+        delete(s.connections, conn)
+    }
+}
+
+func (s *Server) Connections() int {
+    return len(s.connections)
 }

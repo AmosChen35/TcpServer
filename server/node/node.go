@@ -41,6 +41,7 @@ func New(conf *Config) (*Node, error) {
 
     return &Node {
         config: conf,
+        tcpEndpoint:      conf.TCPEndpoint(),
     }, nil
 }
 
@@ -174,13 +175,30 @@ func (n *Node) startTCP(endpoint string, apis []rpc.API, timeouts rpc.TCPTimeout
     if endpoint == "" {
         return nil
     }
+    listener, handler, err := rpc.StartTCPEndpoint(endpoint, apis, timeouts)
+    if err != nil {
+        return err
+    }
+    fmt.Printf("TCP endpoint open %v\n", endpoint)
 
+    n.tcpEndpoint = endpoint
+    n.tcpListener = listener
+    n.tcpHandler = handler
 
     return nil
 }
 
-func (n *Node) stopTPTCP() {
+func (n *Node) stopTCP() {
+    if n.tcpListener != nil {
+        n.tcpListener.Close()
+        n.tcpListener = nil
 
+        fmt.Printf("TCP endpoint closed %v\n", n.tcpEndpoint)
+    }
+    if n.tcpHandler != nil {
+        n.tcpHandler.Stop()
+        n.tcpHandler = nil
+    }
 }
 
 // startRPC is a helper method to start all the various RPC endpoint during node
@@ -194,6 +212,10 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
     }
     // Start the various API endpoints, terminating all in case of errors
     if err := n.startInProc(apis); err != nil {
+        return err
+    }
+    if err := n.startTCP(n.tcpEndpoint, apis, n.config.TCPTimeouts); err != nil {
+        n.stopTCP()
         return err
     }
     // All API endpoints started successfully
@@ -244,6 +266,7 @@ func (n *Node) apis() []rpc.API {
             Namespace: "admin",
             Version:   "1.0",
             Service:   NewPrivateAdminAPI(n),
+            Public:    true,
         },
     }
 }

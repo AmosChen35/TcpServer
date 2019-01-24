@@ -31,6 +31,7 @@ func init() {
     app.HideVersion = true // we have a command to print the version
     app.Copyright = "Copyright 2019 ..."
     app.Commands = []cli.Command{
+        attachCommand,
         consoleCommand,
         versionCommand,
         licenseCommand,

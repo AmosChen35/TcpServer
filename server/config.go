@@ -11,6 +11,8 @@ func makeNode(ctx *cli.Context) *node.Node{
     config := &node.Config{
         Name:    "Server1",
         NodeVersion: params.Version,
+        TCPHost: "127.0.0.1",
+        TCPPort: 8080,
     }
 
     myNode, err := node.New(config)
@@ -21,7 +23,7 @@ func makeNode(ctx *cli.Context) *node.Node{
     if err := myNode.Register(func(ctx *node.ServiceContext) (node.Service, error) {
         return core.New(ctx, &core.Config{
             Name:       "CoreService",
-            TCPPort:    8080,
+            TCPPort:    8081,
         })
     }); err != nil {
         panic(err)

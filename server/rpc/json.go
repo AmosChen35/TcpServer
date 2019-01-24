@@ -1,6 +1,7 @@
 package rpc
 
 import (
+    "net"
     "bytes"
     "encoding/json"
     "fmt"
@@ -58,6 +59,8 @@ type jsonNotification struct {
 // jsonCodec reads and writes JSON-RPC messages to the underlying connection. It
 // also has support for parsing arguments and serializing (result) objects.
 type jsonCodec struct {
+    connection *Connection
+    from   net.Addr                  // remote address
     closer sync.Once                 // close closed channel once
     closed chan interface{}          // closed on Close
     decMu  sync.Mutex                // guards the decoder
@@ -90,12 +93,14 @@ func NewCodec(rwc io.ReadWriteCloser, encode, decode func(v interface{}) error) 
 }
 
 // NewJSONCodec creates a new RPC server codec with support for JSON-RPC 2.0.
-func NewJSONCodec(rwc io.ReadWriteCloser) ServerCodec {
+func NewJSONCodec(rwc io.ReadWriteCloser, f net.Addr, c *Connection) ServerCodec {
     enc := json.NewEncoder(rwc)
     dec := json.NewDecoder(rwc)
     dec.UseNumber()
 
     return &jsonCodec{
+        connection: c,
+        from:   f,
         closed: make(chan interface{}),
         encode: enc.Encode,
         decode: dec.Decode,
@@ -336,10 +341,22 @@ func (c *jsonCodec) Close() {
     c.closer.Do(func() {
         close(c.closed)
         c.rw.Close()
+        c.connection.conn.Close()
     })
 }
 
 // Closed returns a channel which will be closed when Close is called
 func (c *jsonCodec) Closed() <-chan interface{} {
     return c.closed
+}
+
+func (c *jsonCodec) From() string {
+    if (c.from == nil) {
+        return "inproc"
+    }
+    return c.from.String()
+}
+
+func (c *jsonCodec) Connection() *Connection {
+    return c.connection
 }

@@ -20,3 +20,8 @@ func NewPrivateAdminAPI(node *Node) *PrivateAdminAPI {
 func (api *PrivateAdminAPI) HelloAdmin() (string, error) {
     return "HelloAdmin", nil
 }
+
+func (api *PrivateAdminAPI) Connections() (int, error){
+    n := api.node.tcpHandler.Connections()
+    return n, nil
+}

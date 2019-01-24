@@ -12,7 +12,7 @@ func StartTCPEndpoint(endpoint string, apis []API, timeouts TCPTimeouts) (net.Li
             if err := handler.RegisterName(api.Namespace, api.Service); err != nil {
                 return nil, nil, err
             }
-            fmt.Println("WebSocket registered", "service", api.Service, "namespace", api.Namespace)
+            fmt.Println("TCP registered", "service", api.Service, "namespace", api.Namespace)
         }
     }
     var(
@@ -22,9 +22,6 @@ func StartTCPEndpoint(endpoint string, apis []API, timeouts TCPTimeouts) (net.Li
     if listener, err = net.Listen("tcp", endpoint); err != nil {
         return nil, nil, err
     }
-
-    //go NewTCPServer(timeouts, handler).Serve(listener)
-    fmt.Println(listener)
-
-    return listener, nil, err
+    go NewTCPServer(listener, handler, timeouts)
+    return listener, handler, err
 }

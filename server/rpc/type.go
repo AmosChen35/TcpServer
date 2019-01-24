@@ -1,6 +1,7 @@
 package rpc
 
 import(
+    "net"
     "reflect"
     "sync"
 
@@ -39,6 +40,12 @@ type serviceRegistry map[string]*service // collection of services
 type callbacks map[string]*callback      // collection of RPC callbacks
 type subscriptions map[string]*callback  // collection of subscription callbacks
 
+type Connections map[*Connection]int
+
+type Connection struct{
+    conn net.Conn
+}
+
 // Server represents a RPC server
 type Server struct {
     services serviceRegistry
@@ -46,6 +53,8 @@ type Server struct {
     run      int32
     codecsMu sync.Mutex
     codecs   mapset.Set
+
+    connections Connections
 }
 
 // rpcRequest represents a raw incoming RPC request
@@ -86,6 +95,10 @@ type ServerCodec interface {
     Close()
     // Closed when underlying connection is closed
     Closed() <-chan interface{}
+
+    From() string
+
+    Connection() *Connection
 }
 
 // API describes the set of methods offered over the RPC interface

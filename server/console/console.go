@@ -129,6 +129,7 @@ func (c *Console) init(preload []string) error {
 
         if obj := personal.Object(); obj != nil { // make sure the personal api is enabled over the interface
             obj.Set("Hello", bridge.HelloBridge)
+            obj.Set("HelloRPC", c.client.HelloRPC)
         }
     }
 
@@ -139,6 +140,7 @@ func (c *Console) init(preload []string) error {
     }
     if obj := admin.Object(); obj != nil { // make sure the admin api is enabled over the interface
         obj.Set("clearHistory", c.clearHistory)
+        obj.Set("connections", c.client.GetConnections)
     }
 
     // Preload any JavaScript files before starting the console

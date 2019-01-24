@@ -137,7 +137,9 @@ func (op *requestOp) wait(ctx context.Context) (*jsonrpcMessage, error) {
 //
 // The client reconnects automatically if the connection is lost.
 func Dial(rawurl string) (*Client, error) {
-    return DialContext(context.Background(), rawurl)
+    //FIXME should have to check if the rawurl is an ip-address.
+    return DialTCP(rawurl)
+    //return DialContext(context.Background(), rawurl)
 }
 
 // DialContext creates a new RPC client, just like Dial.
@@ -205,6 +207,14 @@ func (c *Client) HelloRPC() (map[string]string, error) {
     ctx, cancel := context.WithTimeout(context.Background(), subscribeTimeout)
     defer cancel()
     err := c.CallContext(ctx, &result, "core_helloCore")
+    return result, err
+}
+
+func(c *Client) GetConnections() (int, error) {
+    var result int
+    ctx, cancel := context.WithTimeout(context.Background(), subscribeTimeout)
+    defer cancel()
+    err := c.CallContext(ctx, &result, "admin_connections")
     return result, err
 }
 
