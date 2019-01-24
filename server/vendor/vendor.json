@@ -27,16 +27,29 @@
 			"revisionTime": "2018-03-10T13:32:14Z"
 		},
 		{
+			"checksumSHA1": "GiVgQkx5acnq+JZtYiuHPlhHoso=",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "3fb116b820352b7f0c281308a4d6250c22d94e27",
+			"revisionTime": "2018-08-30T10:17:45Z"
+		},
+		{
+			"checksumSHA1": "qR7D38Zmn9TPUvGn64k+r0+Kq1c=",
+			"path": "github.com/mattn/go-runewidth",
+			"revision": "703b5e6b11ae25aeb2af9ebb5d5fdf8fa2575211",
+			"revisionTime": "2018-12-18T00:06:49Z"
+		},
+		{
 			"checksumSHA1": "04uWf81//Pki+mIbR7fxZqvNxfU=",
 			"path": "github.com/peterh/liner",
 			"revision": "5a0dfa99e2aa1d433a9642e863da51402e609376",
 			"revisionTime": "2018-08-26T13:27:22Z"
 		},
 		{
-			"checksumSHA1": "WdorbyEJiNbjIOiQzM4TLb/XA7Q=",
+			"checksumSHA1": "XNqyII/ALJueJ0FwJBFm2I+maJc=",
 			"path": "github.com/robertkrimen/otto",
 			"revision": "15f95af6e78dcd2030d8195a138bd88d4f403546",
-			"revisionTime": "2018-06-17T13:11:54Z"
+			"revisionTime": "2018-06-17T13:11:54Z",
+			"tree": true
 		},
 		{
 			"checksumSHA1": "Yx1MU40fyGe7hhqW9+dkv8kXa60=",
