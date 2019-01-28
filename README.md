@@ -1,6 +1,6 @@
 # TcpServer
 ## Simple Usage
-* This program is include server mode and client mode and ou can use the `-h` to see more information about additionally flags.
+* This program is include server mode and client mode and please use the `-h` to see more information about additionally flags.
 
 ## Execute Program With Server Mode
 * The local console started and the default ip-address and port is "127.0.0.1:8080".
