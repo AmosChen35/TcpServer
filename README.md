@@ -11,20 +11,20 @@
 
 
 ## Execute Program With Client Mode
-* The remote console will start and You can use the `attach` flag connect to the server.
+* The remote console will start and you can use the `attach` flag connect to the server.
   ```sh
   $ server attach attach 127.0.0.1:8080
   ```
   <img src="https://github.com/AmosChen35/TcpServer/blob/master/screenshot/execute_client_mode.gif" height="374" width="641">
 
-## Call Control Through Console
-* Execute the local sample Control from the client side and that will return a sample string "HelloBridge".
+## Call control Through Console
+* Execute the local sample control from the client side and that will return a sample string "HelloBridge".
   ```
   > personal.Hello()
   ```
   <img src="https://github.com/AmosChen35/TcpServer/blob/master/screenshot/hello.gif" height="374" width="641">
   
-* Execute the remote sample Control from the client side and that will return a sample json.
+* Execute the remote sample control from the client side and that will return a sample json.
   ```
   > personal.HelloPRC()
   ```
