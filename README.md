@@ -17,14 +17,14 @@
   ```
   <img src="https://github.com/AmosChen35/TcpServer/blob/master/screenshot/execute_client_mode.gif" height="374" width="641">
 
-## Call Contorl Through Console
-* Execute the local sample contorl from the client side and that will return a sample string "HelloBridge".
+## Call Control Through Console
+* Execute the local sample Control from the client side and that will return a sample string "HelloBridge".
   ```
   > personal.Hello()
   ```
   <img src="https://github.com/AmosChen35/TcpServer/blob/master/screenshot/hello.gif" height="374" width="641">
   
-* Execute the remote sample contorl from the client side and that will return a sample json.
+* Execute the remote sample Control from the client side and that will return a sample json.
   ```
   > personal.HelloPRC()
   ```
